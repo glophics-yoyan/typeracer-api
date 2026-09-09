@@ -29,7 +29,7 @@ export interface GameServer {
     close: () => Promise<void>;
 }
 
-interface GameServerOptions {
+export interface GameServerOptions {
     websocket_path?: string | false;
 }
 

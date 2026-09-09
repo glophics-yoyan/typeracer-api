@@ -1,5 +1,5 @@
 import { getConfig } from './config.js';
-import { createGameServer } from './app.js';
+import { createGameServer } from './game-server.js';
 
 const config = getConfig();
 const game_server = createGameServer(config);

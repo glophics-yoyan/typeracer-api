@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import type { AddressInfo } from 'node:net';
 import WebSocket from 'ws';
-import { createGameServer, type GameServer } from '../src/app.js';
+import { createGameServer, type GameServer } from '../src/game-server.js';
 
 let game_server: GameServer;
 let websocket_url = '';
