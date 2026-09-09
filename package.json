@@ -1,0 +1,30 @@
+{
+    "name": "typeracer-api",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "tsx watch src/server.ts",
+        "build": "tsc",
+        "start": "node dist/src/server.js",
+        "lint": "tsc --noEmit",
+        "test": "tsx --test tests/**/*.test.ts"
+    },
+    "engines": {
+        "node": ">=20"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.2",
+        "express": "^5.1.0",
+        "ws": "^8.18.3"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.3",
+        "@types/node": "^20.19.14",
+        "@types/ws": "^8.18.1",
+        "tsx": "^4.20.5",
+        "typescript": "^5.9.2"
+    }
+}
