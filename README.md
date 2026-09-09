@@ -67,16 +67,29 @@ The opponent receives:
 
 Server lifecycle messages are `connected`, `room-state`, `opponent-joined`, `opponent-left`, `pong`, and `error`.
 
-## Deployment
+## Deploy to Vercel
 
-Deploy this service to a host that supports a continuously running Node.js process and WebSocket upgrades, such as Railway, Render, Fly.io, or a VPS. Do not deploy the WebSocket process as a Vercel serverless function.
+Vercel WebSocket support is currently in Public Beta. This repository includes `api/ws.ts` as the Vercel Function entrypoint and rewrites `/ws` to that function.
 
-Run one service instance initially because active socket rooms are held in process memory. Before scaling to multiple instances, add shared room state/pub-sub (for example Redis) or configure sticky sessions.
-
-After deployment, add this to the Next.js project in Vercel and redeploy:
-
-```env
-NEXT_PUBLIC_WEBSOCKET_URL=wss://your-api-host.example/ws
+```bash
+npx vercel
+npx vercel --prod
 ```
 
-Also set the API service's `ALLOWED_ORIGINS` to the exact Vercel production URL.
+Set `ALLOWED_ORIGINS` in the API project's Vercel environment variables:
+
+```env
+ALLOWED_ORIGINS=https://typing-combat.vercel.app
+```
+
+Then add the deployed API URL to the Next.js project's Vercel environment variables and redeploy the frontend:
+
+```env
+NEXT_PUBLIC_WEBSOCKET_URL=wss://your-api-project.vercel.app/ws
+```
+
+Vercel pins an established socket to one Function instance for at most the Function duration. New connections are not guaranteed to reach the same instance. The current in-memory room manager is therefore intended for an initial test deployment; add Redis-backed presence and pub/sub before relying on horizontal scaling.
+
+## Other Node.js hosts
+
+The same project can still run on Railway, Render, Fly.io, or a VPS with `npm start`. On those hosts, the WebSocket endpoint is also `/ws`.

@@ -29,6 +29,10 @@ export interface GameServer {
     close: () => Promise<void>;
 }
 
+interface GameServerOptions {
+    websocket_path?: string | false;
+}
+
 function isOriginAllowed(origin: string | undefined, allowed_origins: string[]): boolean {
     if (!origin) return true;
     return allowed_origins.includes('*') || allowed_origins.includes(origin);
@@ -115,7 +119,10 @@ function handleGameMessage(socket: ManagedSocket, message: ClientMessage, room_m
     }, client_context.user_id);
 }
 
-export function createGameServer(config: AppConfig): GameServer {
+export function createGameServer(
+    config: AppConfig,
+    options: GameServerOptions = { websocket_path: '/ws' },
+): GameServer {
     const app = express();
     const room_manager = new RoomManager();
     const http_server = createServer(app);
@@ -124,9 +131,9 @@ export function createGameServer(config: AppConfig): GameServer {
     );
     const websocket_server = new WebSocketServer({
         server: http_server,
-        path: '/ws',
         maxPayload: MAX_MESSAGE_BYTES,
         verifyClient: verify_client,
+        ...(options.websocket_path ? { path: options.websocket_path } : {}),
     });
 
     app.disable('x-powered-by');
