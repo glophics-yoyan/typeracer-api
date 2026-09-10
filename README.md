@@ -1,6 +1,6 @@
-# TypeRacer Realtime API
+# TypeRacer Authoritative Realtime API
 
-Persistent Express + WebSocket service for the TypeRacer Combat frontend. The service relays gameplay through the server, so players do not need a direct WebRTC connection or a TURN server.
+Persistent Express + WebSocket service for the TypeRacer Combat frontend. Protocol v2 owns live combat state, checkpoints active matches to Neon, and persists authoritative results. The relay protocol remains temporarily available for rollout and rollback.
 
 ## Local setup
 
@@ -18,8 +18,20 @@ The HTTP health check is available at `http://localhost:8080/health` and the Web
 | --- | --- | --- |
 | `PORT` | `8080` | HTTP/WebSocket port. Most hosts inject this automatically. |
 | `ALLOWED_ORIGINS` | `http://localhost:3000,https://typing-combat.vercel.app` | Comma-separated frontend origins allowed to connect. |
+| `DATABASE_URL` | `postgresql://...` | Neon database shared with the frontend room APIs. |
+| `ROOM_TOKEN_SECRET` | `a-long-random-secret` | At least 32 characters and identical to the frontend secret. |
 
-## Client protocol
+## Client protocol v2
+
+Join with the token returned by the frontend room API:
+
+```ts
+socket.send(JSON.stringify({ type: 'join', protocol_version: 2, join_token }));
+```
+
+Client commands are `ready`, `input`, `rematch`, and `ping`. Server events are `room_snapshot`, `presence_changed`, `match_finished`, `match_cancelled`, `rematch_status`, and `error`. All v2 payload keys use snake case. Health, damage, statistics, timers, and results are calculated by this service.
+
+## Legacy protocol v1
 
 Open the socket and join before sending gameplay messages:
 
@@ -67,7 +79,7 @@ The opponent receives:
 
 Server lifecycle messages are `connected`, `room-state`, `opponent-joined`, `opponent-left`, `pong`, and `error`.
 
-## Deploy to Vercel
+## Vercel test deployment
 
 Vercel WebSocket support is currently in Public Beta. This repository includes `api/ws.ts` as the Vercel Function entrypoint and rewrites `/ws` to that function.
 
@@ -88,8 +100,8 @@ Then add the deployed API URL to the Next.js project's Vercel environment variab
 NEXT_PUBLIC_WEBSOCKET_URL=wss://your-api-project.vercel.app/ws
 ```
 
-Vercel pins an established socket to one Function instance for at most the Function duration. New connections are not guaranteed to reach the same instance. The current in-memory room manager is therefore intended for an initial test deployment; add Redis-backed presence and pub/sub before relying on horizontal scaling.
+Vercel pins an established socket to one Function instance for at most the Function duration. New connections are not guaranteed to reach the same instance. Use it only for protocol-v1 testing until Redis-backed presence and pub/sub are implemented.
 
-## Other Node.js hosts
+## Production Node.js hosts
 
-The same project can still run on Railway, Render, Fly.io, or a VPS with `npm start`. On those hosts, the WebSocket endpoint is also `/ws`.
+Protocol v2 targets one long-lived process on Railway, Render, Fly.io, or a VPS. Run the frontend database migrations first, then deploy with `npm run build` and `npm start`. The WebSocket endpoint is `/ws`.
