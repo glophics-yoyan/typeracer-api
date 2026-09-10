@@ -1,8 +1,10 @@
+import express from 'express';
 import { getConfig } from './config.js';
 import { createGameServer } from './game-server.js';
 
 const config = getConfig();
-const game_server = createGameServer(config);
+const app = express();
+const game_server = createGameServer(config, { app, websocket_path: '/ws' });
 
 game_server.http_server.listen(config.port, () => {
     console.log(`[Server] HTTP health check: http://localhost:${config.port}/health`);

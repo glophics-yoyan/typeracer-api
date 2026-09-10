@@ -35,6 +35,7 @@ export interface GameServer {
 }
 
 export interface GameServerOptions {
+    app?: Express;
     websocket_path?: string | false;
     repository?: BattleRepository;
 }
@@ -222,7 +223,7 @@ export function createGameServer(
     config: AppConfig,
     options: GameServerOptions = { websocket_path: '/ws' },
 ): GameServer {
-    const app = express();
+    const app = options.app ?? express();
     const room_manager = new RoomManager();
     const repository = options.repository ?? (config.database_url ? new NeonBattleRepository(config.database_url) : undefined);
     const match_manager = repository
