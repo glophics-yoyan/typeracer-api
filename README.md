@@ -81,7 +81,7 @@ Server lifecycle messages are `connected`, `room-state`, `opponent-joined`, `opp
 
 ## Vercel test deployment
 
-Vercel WebSocket support is currently in Public Beta. This repository includes `api/ws.ts` as the Vercel Function entrypoint and rewrites `/ws` to that function.
+Vercel WebSocket support is currently in Public Beta. Vercel detects `src/server.ts` as the Node/Express entrypoint, which serves both `/health` and `/ws`.
 
 ```bash
 npx vercel

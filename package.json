@@ -4,14 +4,14 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "tsx watch src/standalone.ts",
+        "dev": "tsx watch src/server.ts",
         "build": "tsc",
-        "start": "node dist/src/standalone.js",
+        "start": "node dist/src/server.js",
         "lint": "tsc --noEmit",
         "test": "tsx --test tests/**/*.test.ts"
     },
     "engines": {
-        "node": ">=20"
+        "node": ">=20 <27"
     },
     "dependencies": {
         "@neondatabase/serverless": "^1.1.0",
