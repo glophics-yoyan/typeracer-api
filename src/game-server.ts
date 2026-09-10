@@ -36,6 +36,7 @@ export interface GameServer {
 
 export interface GameServerOptions {
     app?: Express;
+    http_server?: HttpServer;
     websocket_path?: string | false;
     repository?: BattleRepository;
 }
@@ -229,7 +230,7 @@ export function createGameServer(
     const match_manager = repository
         ? new MatchManager(repository, (room_code, message) => room_manager.broadcastV2(room_code, message))
         : undefined;
-    const http_server = createServer(app);
+    const http_server = options.http_server ?? createServer(app);
     const verify_client: WebSocket.VerifyClientCallbackSync = ({ origin }) => (
         isOriginAllowed(origin, config.allowed_origins)
     );
