@@ -3,6 +3,8 @@ import 'dotenv/config';
 export interface AppConfig {
     port: number;
     allowed_origins: string[];
+    database_url?: string;
+    room_token_secret?: string;
 }
 
 function parsePort(value: string | undefined): number {
@@ -26,5 +28,7 @@ export function getConfig(): AppConfig {
     return {
         port: parsePort(process.env.PORT),
         allowed_origins: parseOrigins(process.env.ALLOWED_ORIGINS),
+        database_url: process.env.DATABASE_URL,
+        room_token_secret: process.env.ROOM_TOKEN_SECRET,
     };
 }
