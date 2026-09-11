@@ -79,29 +79,19 @@ The opponent receives:
 
 Server lifecycle messages are `connected`, `room-state`, `opponent-joined`, `opponent-left`, `pong`, and `error`.
 
-## Vercel test deployment
+## Render deployment
 
-Vercel WebSocket support is currently in Public Beta. Vercel detects `src/server.ts` as the Node/Express entrypoint, which serves both `/health` and `/ws`.
+Protocol v2 runs on one long-lived Render process because room presence and active match coordination are held in process memory. The root `render.yaml` creates one paid Singapore service and exposes HTTP health checks at `/health` and WebSockets at `/ws`.
 
-```bash
-npx vercel
-npx vercel --prod
-```
-
-Set `ALLOWED_ORIGINS` in the API project's Vercel environment variables:
-
-```env
-ALLOWED_ORIGINS=https://typing-combat.vercel.app
-```
-
-Then add the deployed API URL to the Next.js project's Vercel environment variables and redeploy the frontend:
+1. Apply the frontend database migrations to the shared Neon database.
+2. Create a Render Blueprint from this repository.
+3. Enter `DATABASE_URL` and `ROOM_TOKEN_SECRET` when prompted. The room-token secret must exactly match the frontend value.
+4. Wait for `/health` to report `success: true` and `database: "healthy"`.
+5. Set the frontend deployment environment and redeploy it:
 
 ```env
-NEXT_PUBLIC_WEBSOCKET_URL=wss://your-api-project.vercel.app/ws
+NEXT_PUBLIC_GAME_PROTOCOL_VERSION=2
+NEXT_PUBLIC_WEBSOCKET_URL=wss://your-render-service.onrender.com/ws
 ```
 
-Vercel pins an established socket to one Function instance for at most the Function duration. New connections are not guaranteed to reach the same instance. Use it only for protocol-v1 testing until Redis-backed presence and pub/sub are implemented.
-
-## Production Node.js hosts
-
-Protocol v2 targets one long-lived process on Railway, Render, Fly.io, or a VPS. Run the frontend database migrations first, then deploy with `npm run build` and `npm start`. The WebSocket endpoint is `/ws`.
+Keep the service at exactly one instance until room presence and pub/sub move to shared infrastructure.

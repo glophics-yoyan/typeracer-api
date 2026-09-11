@@ -35,8 +35,6 @@ export interface GameServer {
 }
 
 export interface GameServerOptions {
-    app?: Express;
-    http_server?: HttpServer;
     websocket_path?: string | false;
     repository?: BattleRepository;
 }
@@ -222,15 +220,15 @@ async function handleGameMessage(
 
 export function createGameServer(
     config: AppConfig,
-    options: GameServerOptions = { websocket_path: '/ws' },
+    options: GameServerOptions = {},
 ): GameServer {
-    const app = options.app ?? express();
+    const app = express();
     const room_manager = new RoomManager();
     const repository = options.repository ?? (config.database_url ? new NeonBattleRepository(config.database_url) : undefined);
     const match_manager = repository
         ? new MatchManager(repository, (room_code, message) => room_manager.broadcastV2(room_code, message))
         : undefined;
-    const http_server = options.http_server ?? createServer(app);
+    const http_server = createServer(app);
     const verify_client: WebSocket.VerifyClientCallbackSync = ({ origin }) => (
         isOriginAllowed(origin, config.allowed_origins)
     );
@@ -238,7 +236,7 @@ export function createGameServer(
         server: http_server,
         maxPayload: MAX_MESSAGE_BYTES,
         verifyClient: verify_client,
-        ...(options.websocket_path ? { path: options.websocket_path } : {}),
+        ...(options.websocket_path !== false ? { path: options.websocket_path ?? '/ws' } : {}),
     });
 
     app.disable('x-powered-by');
@@ -261,9 +259,9 @@ export function createGameServer(
 
     app.get('/health', async (_request, response) => {
         const database_healthy = repository ? await repository.health() : false;
-        response.json({
-            success: database_healthy || !repository,
-            message: database_healthy || !repository ? 'healthy' : 'degraded',
+        response.status(database_healthy ? 200 : 503).json({
+            success: database_healthy,
+            message: database_healthy ? 'healthy' : 'degraded',
             data: {
                 rooms: room_manager.room_count,
                 connections: room_manager.connection_count,
