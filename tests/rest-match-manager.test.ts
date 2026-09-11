@@ -92,12 +92,13 @@ test('REST battle flow persists readiness, countdown, inputs, and one result', a
     assert.equal(active.snapshot.phase, 'active');
     const finished = await manager.inputs(claims('player-1', 'Alpha'), [
         input(1, 'x', now),
-        input(2, 'b', now),
+        input(2, 'a', now),
+        input(3, 'b', now),
     ]);
 
     assert.equal(finished.snapshot.phase, 'finished');
     assert.equal(finished.match_result?.winner_user_id, 'player-1');
-    assert.equal(finished.match_result?.participants.find((player) => player.user_id === 'player-1')?.accuracy, 0.5);
+    assert.equal(finished.match_result?.participants.find((player) => player.user_id === 'player-1')?.accuracy, 2 / 3);
     assert.equal(repository.finalized.length, 1);
     assert.equal(repository.stored_state?.state.result_persisted, true);
 });

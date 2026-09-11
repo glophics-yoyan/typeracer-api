@@ -61,7 +61,7 @@ class MemoryRepository implements BattleRepository {
     async health() { return true; }
 }
 
-test('authoritative inputs advance on mistakes and persist one server result', async () => {
+test('authoritative inputs wait for mistakes to be corrected and persist one server result', async () => {
     const repository = new MemoryRepository();
     const events: ServerMessage[] = [];
     const manager = new MatchManager(repository, (_room_code, message) => events.push(message));
@@ -72,13 +72,14 @@ test('authoritative inputs advance on mistakes and persist one server result', a
 
     await manager.input('ABC234', 'player-1', input(1, 'x'));
     await assert.rejects(() => manager.input('ABC234', 'player-1', input(1, 'a')), /out of order/);
-    await manager.input('ABC234', 'player-1', input(2, 'b'));
+    await manager.input('ABC234', 'player-1', input(2, 'a'));
+    await manager.input('ABC234', 'player-1', input(3, 'b'));
     await manager.tick(Date.now() + 5000);
 
     assert.equal(repository.finalized.length, 1);
     const player = Object.values(repository.finalized[0]!.players).find((candidate) => candidate.user_id === 'player-1');
     assert.equal(player?.position, 2);
-    assert.equal(player?.accuracy, 0.5);
+    assert.equal(player?.accuracy, 2 / 3);
     assert.equal(events.some((event) => event.type === 'match_finished'), true);
 });
 

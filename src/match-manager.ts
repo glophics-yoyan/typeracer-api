@@ -153,7 +153,7 @@ export class MatchManager {
 
         const expected_character = state.quote.text[player.position];
         const is_correct = message.character === expected_character;
-        player.position = Math.min(player.position + 1, state.quote.text.length);
+        if (is_correct) player.position = Math.min(player.position + 1, state.quote.text.length);
         player.total_keystrokes += 1;
         player.correct_keystrokes += is_correct ? 1 : 0;
         player.last_processed_sequence = message.sequence;
