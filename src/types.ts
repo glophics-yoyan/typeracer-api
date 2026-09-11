@@ -88,6 +88,7 @@ export interface AuthoritativePlayer extends RoomPlayer {
     last_processed_sequence: number;
     input_window_started_at: number;
     input_window_count: number;
+    last_seen_at?: number;
 }
 
 export interface AuthoritativeMatch {
@@ -109,6 +110,7 @@ export interface AuthoritativeMatch {
     last_tick_at: number;
     rematch_votes: Record<string, boolean>;
     rematch_expires_at: number | null;
+    result_persisted?: boolean;
 }
 
 export interface RoomRecord {
@@ -128,4 +130,38 @@ export interface RoomTokenClaims {
     role: 'host' | 'player';
     issued_at: number;
     expires_at: number;
+}
+
+export interface RoomSnapshot {
+    room_code: string;
+    match_id: string | null;
+    revision: number;
+    server_time: number;
+    phase: MatchPhase;
+    quote: BattleQuote | null;
+    countdown_ends_at: number | null;
+    reconnect_deadline: number | null;
+    started_at: number | null;
+    finished_at: number | null;
+    winner_user_id: string | null;
+    finished_reason: string | null;
+    checkpointed_sequences: Record<string, number>;
+    players: Array<Omit<AuthoritativePlayer, 'input_window_started_at' | 'input_window_count' | 'last_seen_at'>>;
+}
+
+export interface MatchResult {
+    match_id: string;
+    winner_user_id: string | null;
+    finished_reason: string;
+    duration_ms: number;
+    participants: RoomSnapshot['players'];
+}
+
+export interface RestBattleData {
+    snapshot: RoomSnapshot;
+    match_result: MatchResult | null;
+    rematch_status: {
+        votes: Record<string, boolean>;
+        expires_at: number | null;
+    };
 }

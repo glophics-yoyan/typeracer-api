@@ -20,20 +20,24 @@ export class NeonBattleRepository implements BattleRepository {
 
     async getRoom(room_code: string): Promise<RoomRecord | null> {
         const rooms = await this.sql`
-            SELECT id, code, host_id, difficulty, status
-            FROM rooms WHERE code = ${room_code}
+            SELECT r.id, r.code, r.host_id, r.difficulty, r.status,
+                COALESCE(
+                    JSON_AGG(
+                        JSON_BUILD_OBJECT('user_id', rp.user_id, 'username', u.username)
+                        ORDER BY rp.joined_at
+                    ) FILTER (WHERE rp.user_id IS NOT NULL),
+                    '[]'::JSON
+                ) AS players
+            FROM rooms r
+            LEFT JOIN room_players rp ON rp.room_id = r.id
+            LEFT JOIN users u ON u.id = rp.user_id
+            WHERE r.code = ${room_code}
+            GROUP BY r.id
         `;
         if (!rooms[0]) return null;
-        const room_id = String(rooms[0].id);
-        const players = await this.sql`
-            SELECT rp.user_id, u.username
-            FROM room_players rp
-            JOIN users u ON u.id = rp.user_id
-            WHERE rp.room_id = ${room_id}
-            ORDER BY rp.joined_at
-        `;
+        const players = Array.isArray(rooms[0].players) ? rooms[0].players as Array<Record<string, unknown>> : [];
         return {
-            id: room_id,
+            id: String(rooms[0].id),
             code: String(rooms[0].code),
             host_id: String(rooms[0].host_id),
             difficulty: Number(rooms[0].difficulty ?? 2),
